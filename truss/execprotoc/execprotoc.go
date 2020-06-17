@@ -30,7 +30,7 @@ func GeneratePBDotGo(protoPaths, gopath []string, outDir string) error {
 		return errors.Wrap(err, "cannot find protoc-gen-gogo in PATH")
 	}
 
-	err = protoc(protoPaths, gopath, genGoCode)
+	err = protoc(protoPaths, gopath, genGoCode, "--swagger_out=logtostderr=true:.")
 	if err != nil {
 		return errors.Wrap(err, "cannot exec protoc with protoc-gen-gogo")
 	}
@@ -100,7 +100,7 @@ func getProtocOutput(protoPaths, gopath []string) ([]byte, error) {
 }
 
 // protoc executes protoc on protoPaths
-func protoc(protoPaths, gopath []string, plugin string) error {
+func protoc(protoPaths, gopath []string, plugins ...string) error {
 	var cmdArgs []string
 
 	cmdArgs = append(cmdArgs, "--proto_path="+filepath.Dir(protoPaths[0]))
@@ -109,7 +109,10 @@ func protoc(protoPaths, gopath []string, plugin string) error {
 		cmdArgs = append(cmdArgs, "-I"+filepath.Join(gp, "src"))
 	}
 
-	cmdArgs = append(cmdArgs, plugin)
+	for _, plugin := range plugins {
+		cmdArgs = append(cmdArgs, plugin)
+	}
+
 	// Append each definition file path to the end of that command args
 	cmdArgs = append(cmdArgs, protoPaths...)
 
@@ -124,7 +127,6 @@ func protoc(protoPaths, gopath []string, plugin string) error {
 			"protoc exec failed.\nprotoc output:\n\n%v\nprotoc arguments:\n\n%v\n\n",
 			string(outBytes), protocExec.Args)
 	}
-
 
 	return nil
 }

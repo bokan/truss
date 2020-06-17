@@ -170,6 +170,8 @@ func parseInput() (*truss.Config, error) {
 		return nil, nil
 	}
 
+	fmt.Println("svcName", svcName)
+
 	svcName = strings.ToLower(svcName)
 
 	svcDirName := svcName
