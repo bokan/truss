@@ -9,7 +9,7 @@ var ServerDecodeTemplate = `
 	// body. Primarily useful in a server.
 	func DecodeHTTP{{$binding.Label}}Request(_ context.Context, r *http.Request) (interface{}, error) {
 		defer r.Body.Close()
-		var req pb.{{GoName $binding.Parent.RequestType}}
+		var req {{GoName $binding.Parent.RequestType}}
 		buf, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot read body of http request")
@@ -63,7 +63,7 @@ var ServerTemplate = `
 // Version: {{.Version}}
 // Version Date: {{.VersionDate}}
 
-package svc
+package {{ToLower .Service.Name}}
 
 // This file provides server-side bindings for the HTTP transport.
 // It utilizes the transport/http.Server.
@@ -86,9 +86,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	httptransport "github.com/go-kit/kit/transport/http"
-
-	// This service
-	pb "{{.PBImportPath -}}"
 )
 
 const contentType = "application/json; charset=utf-8"
@@ -99,14 +96,14 @@ var (
 	_ = strconv.Atoi
 	_ = httptransport.NewServer
 	_ = ioutil.NopCloser
-	_ = pb.New{{.Service.Name}}Client
+	_ = New{{.Service.Name}}Client
 	_ = io.Copy
 	_ = errors.Wrap
 )
 
 // MakeHTTPHandler returns a handler that makes a set of endpoints available
 // on predefined paths.
-func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption) http.Handler {
+func MakeHTTPHandler(m *mux.Router, endpoints Endpoints, options ...httptransport.ServerOption) http.Handler {
 	{{- if .HTTPHelper.Methods}}
 		serverOptions := []httptransport.ServerOption{
 			httptransport.ServerBefore(headersToContext),
@@ -115,7 +112,6 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		}
 		serverOptions = append(serverOptions, options...)
 	{{- end }}
-	m := mux.NewRouter()
 
 	{{range $method := .HTTPHelper.Methods}}
 		{{range $binding := $method.Bindings}}

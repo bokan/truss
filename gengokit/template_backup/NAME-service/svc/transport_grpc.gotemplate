@@ -3,7 +3,7 @@
 // Version: {{.Version}}
 // Version Date: {{.VersionDate}}
 
-package {{ToLower .Service.Name}}
+package svc
 
 // This file provides server-side bindings for the gRPC transport.
 // It utilizes the transport/grpc.Server.
@@ -15,10 +15,13 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+
+	// This Service
+	pb "{{.PBImportPath -}}"
 )
 
 // MakeGRPCServer makes a set of endpoints available as a gRPC {{.Service.Name}}Server.
-func MakeGRPCServer(endpoints Endpoints, options ...grpctransport.ServerOption) {{.Service.Name}}Server {
+func MakeGRPCServer(endpoints Endpoints, options ...grpctransport.ServerOption) pb.{{.Service.Name}}Server {
 	serverOptions := []grpctransport.ServerOption{
 		grpctransport.ServerBefore(metadataToContext),
 	}
@@ -45,12 +48,12 @@ type grpcServer struct {
 
 // Methods for grpcServer to implement {{GoName .Service.Name}}Server interface
 {{range $i := .Service.Methods}}
-func (s *grpcServer) {{GoName $i.Name}}(ctx context.Context, req *{{GoName $i.RequestType.Name}}) (*{{GoName $i.ResponseType.Name}}, error) {
+func (s *grpcServer) {{GoName $i.Name}}(ctx context.Context, req *pb.{{GoName $i.RequestType.Name}}) (*pb.{{GoName $i.ResponseType.Name}}, error) {
 	_, rep, err := s.{{ToLower $i.Name}}.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*{{GoName $i.ResponseType.Name}}), nil
+	return rep.(*pb.{{GoName $i.ResponseType.Name}}), nil
 }
 {{end}}
 
@@ -59,7 +62,7 @@ func (s *grpcServer) {{GoName $i.Name}}(ctx context.Context, req *{{GoName $i.Re
 // DecodeGRPC{{$i.Name}}Request is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC {{ToLower $i.Name}} request to a user-domain {{ToLower $i.Name}} request. Primarily useful in a server.
 func DecodeGRPC{{$i.Name}}Request(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*{{GoName $i.RequestType.Name}})
+	req := grpcReq.(*pb.{{GoName $i.RequestType.Name}})
 	return req, nil
 }
 {{end}}
@@ -69,7 +72,7 @@ func DecodeGRPC{{$i.Name}}Request(_ context.Context, grpcReq interface{}) (inter
 // EncodeGRPC{{$i.Name}}Response is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain {{ToLower $i.Name}} response to a gRPC {{ToLower $i.Name}} reply. Primarily useful in a server.
 func EncodeGRPC{{$i.Name}}Response(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*{{GoName $i.ResponseType.Name}})
+	resp := response.(*pb.{{GoName $i.ResponseType.Name}})
 	return resp, nil
 }
 {{end}}

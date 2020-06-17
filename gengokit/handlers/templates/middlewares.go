@@ -1,12 +1,7 @@
 package templates
 
 const Middlewares = `
-package handlers
-
-import (
-	"{{.ImportPath -}} /svc"
-	pb "{{.PBImportPath -}}"
-)
+package {{ToLower .Service.Name}}
 
 // WrapEndpoints accepts the service's entire collection of endpoints, so that a
 // set of middlewares can be wrapped around every middleware (e.g., access
@@ -14,7 +9,7 @@ import (
 // endpoints and not others (e.g., endpoints requiring authenticated access).
 // Note that the final middleware wrapped will be the outermost middleware
 // (i.e. applied first)
-func WrapEndpoints(in svc.Endpoints) svc.Endpoints {
+func WrapEndpoints(in Endpoints) Endpoints {
 
 	// Pass a middleware you want applied to every endpoint.
 	// optionally pass in endpoints by name that you want to be excluded
@@ -34,7 +29,7 @@ func WrapEndpoints(in svc.Endpoints) svc.Endpoints {
 	return in
 }
 
-func WrapService(in pb.{{.Service.Name}}Server) pb.{{.Service.Name}}Server {
+func WrapService(in {{.Service.Name}}Server) {{.Service.Name}}Server {
 	return in
 }
 `

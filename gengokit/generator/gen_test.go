@@ -30,9 +30,9 @@ func init() {
 
 func TestTemplatePathToActual(t *testing.T) {
 	pathToWants := map[string]string{
-		"NAME-service/":                "package-service/",
-		"NAME-service/test.gotemplate": "package-service/test.go",
-		"NAME-service/NAME":            "package-service/package",
+		"NAME/":                "package-service/",
+		"NAME/test.gotemplate": "package-service/test.go",
+		"NAME/NAME":            "package-service/package",
 	}
 
 	for path, want := range pathToWants {
@@ -87,7 +87,7 @@ func TestApplyTemplateFromPath(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	end, err := applyTemplateFromPath("svc/endpoints.gotemplate", te)
+	end, err := applyTemplateFromPath(endpointsGotemplate, te)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -125,5 +125,6 @@ func protoc(protoPaths, gopath []string, plugin string) error {
 			string(outBytes), protocExec.Args)
 	}
 
+
 	return nil
 }

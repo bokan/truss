@@ -26,7 +26,7 @@ import (
 )
 
 var (
-	svcPackageFlag = flag.String("svcout", "", "Go package path where the generated Go service will be written. Trailing slash will create a NAME-service directory")
+	svcPackageFlag = flag.String("svcout", "", "Go package path where the generated Go service will be written. Trailing slash will create a NAME directory")
 	verboseFlag    = flag.BoolP("verbose", "v", false, "Verbose output")
 	helpFlag       = flag.BoolP("help", "h", false, "Print usage")
 	getStartedFlag = flag.BoolP("getstarted", "", false, "Output a 'getstarted.proto' protobuf file in ./")
@@ -157,13 +157,10 @@ func parseInput() (*truss.Config, error) {
 	}
 
 	cfg.PBPackage = p[0].PkgPath
-	cfg.PBPath = protoDir
+	//cfg.PBPath = protoDir
+
 	log.WithField("PB Package", cfg.PBPackage).Debug()
 	log.WithField("PB Path", cfg.PBPath).Debug()
-
-	if err := execprotoc.GeneratePBDotGo(cfg.DefPaths, cfg.GoPath, cfg.PBPath); err != nil {
-		return nil, errors.Wrap(err, "cannot create .pb.go files")
-	}
 
 	// Service Path
 	svcName, err := parsesvcname.FromPaths(cfg.GoPath, cfg.DefPaths)
@@ -175,10 +172,24 @@ func parseInput() (*truss.Config, error) {
 
 	svcName = strings.ToLower(svcName)
 
-	svcDirName := svcName + "-service"
+	svcDirName := svcName
 	log.WithField("svcDirName", svcDirName).Debug()
 
 	svcPath := filepath.Join(filepath.Dir(cfg.DefPaths[0]), svcDirName)
+
+	cfg.PBPath = svcPath
+
+	// Create svcPath for the case that it does not exist
+	err = os.MkdirAll(svcPath, 0777)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot create svcPath directory: %s", svcPath)
+	}
+
+	if err := execprotoc.GeneratePBDotGo(cfg.DefPaths, cfg.GoPath, cfg.PBPath); err != nil {
+		return nil, errors.Wrap(err, "cannot create .pb.go files")
+	}
+
+
 
 	if *svcPackageFlag != "" {
 		svcOut := *svcPackageFlag
@@ -202,11 +213,6 @@ func parseInput() (*truss.Config, error) {
 
 	log.WithField("svcPath", svcPath).Debug()
 
-	// Create svcPath for the case that it does not exist
-	err = os.MkdirAll(svcPath, 0777)
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create svcPath directory: %s", svcPath)
-	}
 
 	p, err = packages.Load(nil, svcPath)
 	if err != nil || len(p) == 0 {
